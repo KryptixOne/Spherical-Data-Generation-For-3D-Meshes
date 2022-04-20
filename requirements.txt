@@ -1,0 +1,12 @@
+numpy
+h5py
+trimesh
+pyrender
+matplotlib
+python-fcl
+shapely
+sklearn
+scipy
+pandas
+shutil
+open3d
