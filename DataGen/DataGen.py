@@ -408,7 +408,7 @@ def main():
     directoryForMeshes = 'D:/Thesis/Data/OrigData'
     directoryForGrasps = 'D:/Thesis/Data/OrigData/grasps'
     directoryHoldingMeshFiles = 'D:/Thesis/Data/OrigData/meshes'
-    directoryTemp = 'D:/Thesis/acronym-main/temp'  # DO NOT CHANGE. IF WRONG DIRECTORY, LOSS OF FILES WILL OCCUR
+    directoryTemp = r'D:/Thesis/Thesis Code/temp'  # DO NOT CHANGE. IF WRONG DIRECTORY, LOSS OF FILES WILL OCCUR
     l = 0  # break test counter
 
     graspFiles = ['grasps/' + f for f in os.listdir(directoryForGrasps) if isfile(join(directoryForGrasps, f))]
@@ -474,6 +474,7 @@ def main():
                                                                       Existing_grasps_list_o3d)
 
                 # For visualization purposes
+                """
                 plt.imshow(spherical_data_img.squeeze(0), interpolation='nearest')
                 plt.show()
                 plt.imshow(positional_img.squeeze(0), interpolation='nearest')
@@ -484,6 +485,7 @@ def main():
                 plt.show()
                 plt.imshow(orentiation_img[2,:,:], interpolation='nearest')
                 plt.show()
+                """
 
                 complete_img_data = np.concatenate((spherical_data_img, positional_img, orentiation_img),
                                                    axis=0)  # (8xResxRes)

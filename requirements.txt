@@ -8,5 +8,4 @@ shapely
 sklearn
 scipy
 pandas
-shutil
 open3d
