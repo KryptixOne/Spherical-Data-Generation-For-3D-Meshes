@@ -17,6 +17,7 @@ from scipy.spatial import Delaunay
 from sklearn.preprocessing import normalize
 import logging
 import math as m
+import pickle
 
 logger = logging.getLogger("trimesh")
 logger.setLevel(logging.ERROR)
@@ -196,11 +197,11 @@ def grasps_to_spherical(grasps_in_hull, rayOrigins, Existing_grasps_list_o3d, us
     distDict = dict(Counter(minDistLoc))
 
     spherical_positions = np.zeros((1, rayOrigins.shape[0]))
-    spherical_positions[0][np.asarray(list(distDict.keys()))] = list(distDict.values())
+    if bool(distDict) == True:
+        spherical_positions[0][np.asarray(list(distDict.keys()))] = list(distDict.values())
     # spherical_positions[0][minDistLoc] = 1
     res = int(np.sqrt(rayOrigins.shape[0]))
     spherical_positions = spherical_positions.reshape((res, res))
-
     spherical_positions = np.expand_dims(spherical_positions, axis=0)
 
     if use_Two_Vectors == True:
@@ -228,38 +229,44 @@ def grasps_to_spherical(grasps_in_hull, rayOrigins, Existing_grasps_list_o3d, us
 
     if use_spherical_coords == True:
         # obtain unit vectors of Rays used for Spherical Positions
-        v = copy.deepcopy(rayOrigins[minDistLoc])
-        unitVect_rays = normalize(v, norm="l2", axis=1)
+        if bool(distDict)==True:
+            v = copy.deepcopy(rayOrigins[minDistLoc])
+            unitVect_rays = normalize(v, norm="l2", axis=1)
 
-        # obtain unit vectors of gripper orientation
-        gripper_endpoint = np.asarray([i.vertices[1] for i in Existing_grasps_list_o3d])
-        gripper_vect = grasps_in_hull - gripper_endpoint
-        unitVect_gripper = normalize(gripper_vect, norm='l2', axis=1)
+            # obtain unit vectors of gripper orientation
+            gripper_endpoint = np.asarray([i.vertices[1] for i in Existing_grasps_list_o3d])
+            gripper_vect = grasps_in_hull - gripper_endpoint
+            unitVect_gripper = normalize(gripper_vect, norm='l2', axis=1)
 
-        # convert unitRays and unitGrippers to spherical coords
-        spherical_rays = cart2sph(unitVect_rays)  # r, theta, phi
-        spherical_gripper = cart2sph(unitVect_gripper)
+            # convert unitRays and unitGrippers to spherical coords
+            spherical_rays = cart2sph(unitVect_rays)  # r, theta, phi
+            spherical_gripper = cart2sph(unitVect_gripper)
 
-        # ray_theta - gripper_theta = theta_diff
-        # hence, ray_theta - theta_diff = gripper_theta
-        theta_diff = spherical_rays[:, 1] - spherical_gripper[:, 1]
-        phi_diff = spherical_rays[:, 2] - spherical_gripper[:, 2]
+            # ray_theta - gripper_theta = theta_diff
+            # hence, ray_theta - theta_diff = gripper_theta
+            theta_diff = spherical_rays[:, 1] - spherical_gripper[:, 1]
+            phi_diff = spherical_rays[:, 2] - spherical_gripper[:, 2]
 
-        # obtain rejection vectors which are orthogonal to unit gripper and show direction toward rayVect
-        rejection_Vectors = get_Rejection_Vector(unitVect_rays, unitVect_gripper)
+            # obtain rejection vectors which are orthogonal to unit gripper and show direction toward rayVect
+            rejection_Vectors = get_Rejection_Vector(unitVect_rays, unitVect_gripper)
 
-        # obtain unitvector of com-->p1, Then obtain rejection vectors
-        left = np.asarray([i.vertices[45] for i in Existing_grasps_list_o3d])
-        left_vects = grasps_in_hull - left
-        left_vects_normalized = normalize(left_vects, norm='l2', axis=1)
-        orient_rejection = get_Rejection_Vector(left_vects_normalized, unitVect_gripper)
-        rotation_angles = find_angle(rejection_Vectors, orient_rejection, unitVect_gripper)
+            # obtain unitvector of com-->p1, Then obtain rejection vectors
+            left = np.asarray([i.vertices[45] for i in Existing_grasps_list_o3d])
+            left_vects = grasps_in_hull - left
+            left_vects_normalized = normalize(left_vects, norm='l2', axis=1)
+            orient_rejection = get_Rejection_Vector(left_vects_normalized, unitVect_gripper)
+            rotation_angles = find_angle(rejection_Vectors, orient_rejection, unitVect_gripper)
 
-        Orientation_img = np.zeros((3, 1, rayOrigins.shape[0]))
-        Orientation_img[0][0][minDistLoc] = theta_diff
-        Orientation_img[1][0][minDistLoc] = phi_diff
-        Orientation_img[2][0][minDistLoc] = rotation_angles
-        Orientation_img = Orientation_img.reshape((3, res, res))
+            Orientation_img = np.zeros((3, 1, rayOrigins.shape[0]))
+
+            Orientation_img[0][0][minDistLoc] = theta_diff
+            Orientation_img[1][0][minDistLoc] = phi_diff
+            Orientation_img[2][0][minDistLoc] = rotation_angles
+            Orientation_img = Orientation_img.reshape((3, res, res))
+        else:
+            Orientation_img = np.zeros((3, 1, rayOrigins.shape[0]))
+            Orientation_img = Orientation_img.reshape((3, res, res))
+
 
     return spherical_positions, Orientation_img
 
@@ -401,15 +408,16 @@ def as_mesh(scene_or_mesh):
 def main():
     import time
     t0 = time.time()
-    num_grasps_to_display = 40
+    num_grasps_to_display = 100
     num_of_rotations = 10
     randomized_rotation = False
+    resolution = 60
     rotational_degree = 60  # degree of rotation for hemisphere
     directoryForMeshes = 'D:/Thesis/Data/OrigData'
     directoryForGrasps = 'D:/Thesis/Data/OrigData/grasps'
     directoryHoldingMeshFiles = 'D:/Thesis/Data/OrigData/meshes'
     directoryTemp = r'D:/Thesis/Thesis Code/temp'  # DO NOT CHANGE. IF WRONG DIRECTORY, LOSS OF FILES WILL OCCUR
-    l = 0  # break test counter
+    l = 1  # break test counter
 
     graspFiles = ['grasps/' + f for f in os.listdir(directoryForGrasps) if isfile(join(directoryForGrasps, f))]
     # meshFiles = [m for m in os.listdir(directoryHoldingMeshFiles) if isfile(join(directoryHoldingMeshFiles, m))]
@@ -423,10 +431,15 @@ def main():
         T, success = load_grasps(os.path.join(directoryForMeshes, f))
 
         # create visual markers for grasps
-        successful_grasps = [
-            create_gripper_marker(color=[0, 255, 0]).apply_transform(t)
-            for t in T[np.random.choice(np.where(success == 1)[0], num_grasps_to_display)]
-        ]
+        try:
+            successful_grasps = [
+                create_gripper_marker(color=[0, 255, 0]).apply_transform(t)
+                for t in T[np.random.choice(np.where(success == 1)[0], num_grasps_to_display)]
+            ]
+        except:
+            print(f)
+            print('issue with grasp')
+            continue
 
         # Centering around origin and scaling to unit vector max length
 
@@ -455,65 +468,73 @@ def main():
         # o3d.visualization.draw_geometries(obj_mesh_o3d_normalized + successful_grasps_o3d, mesh_show_back_face=True)
 
         # rotate hemisphere around object to sample depth in different ways.
-        if num_of_rotations is not None:
-            img_list = []
+        try:
+            if num_of_rotations is not None:
+                img_list = []
 
-            rotationsArray, num_of_rotations = create_random_rotation_vectors(num_of_rotations,
-                                                                              random=randomized_rotation,
-                                                                              degree=rotational_degree)
-            for i in range(num_of_rotations):
-                # create spherical Data Img
-                spherical_data_img = create_spherical_depth_data(obj_mesh_o3d_normalized[0],
-                                                                 rotations=rotationsArray[i][0])
-                # img_list.append(spherical_data_img)
+                rotationsArray, num_of_rotations = create_random_rotation_vectors(num_of_rotations,
+                                                                                  random=randomized_rotation,
+                                                                                  degree=rotational_degree)
+                for i in range(num_of_rotations):
+                    # create spherical Data Img
+                    spherical_data_img = create_spherical_depth_data(obj_mesh_o3d_normalized[0],
+                                                                     rotations=rotationsArray[i][0], resolution=resolution)
+                    # img_list.append(spherical_data_img)
 
-                # Create Positional and orient img
+                    # Create Positional and orient img
+                    available_grasps, positionalHemisphere, Existing_grasps_list_o3d = grasps_in_hemisphere(
+                        successful_grasps_o3d, rotation=rotationsArray[i][0], hemis_resolution=resolution)
+                    positional_img, orentiation_img = grasps_to_spherical(available_grasps, positionalHemisphere,
+                                                                          Existing_grasps_list_o3d)
+
+                    # For visualization purposes
+
+                    # plt.imshow(spherical_data_img.squeeze(0), interpolation='nearest')
+                    # plt.show()
+                    # plt.imshow(positional_img.squeeze(0), interpolation='nearest')
+                    # plt.show()
+                    # plt.imshow(orentiation_img[0,:,:], interpolation='nearest')
+                    # plt.show()
+                    # plt.imshow(orentiation_img[1,:,:], interpolation='nearest')
+                    # plt.show()
+                    # plt.imshow(orentiation_img[2,:,:], interpolation='nearest')
+                    # plt.show()
+
+                    complete_img_data = np.concatenate((spherical_data_img, positional_img, orentiation_img),
+                                                       axis=0)  # (8xResxRes)
+                    img_list.append(complete_img_data)
+                img_collection[f] = img_list
+
+
+            else:
+
+                spherical_data_img = create_spherical_depth_data(obj_mesh_o3d_normalized)
+
                 available_grasps, positionalHemisphere, Existing_grasps_list_o3d = grasps_in_hemisphere(
-                    successful_grasps_o3d, rotation=rotationsArray[i][0])
-                positional_img, orentiation_img = grasps_to_spherical(available_grasps, positionalHemisphere,
-                                                                      Existing_grasps_list_o3d)
+                    successful_grasps_o3d, rotation=rotationsArray[i][0], hemis_resolution=resolution)
 
-                # For visualization purposes
-                """
-                plt.imshow(spherical_data_img.squeeze(0), interpolation='nearest')
-                plt.show()
-                plt.imshow(positional_img.squeeze(0), interpolation='nearest')
-                plt.show()
-                plt.imshow(orentiation_img[0,:,:], interpolation='nearest')
-                plt.show()
-                plt.imshow(orentiation_img[1,:,:], interpolation='nearest')
-                plt.show()
-                plt.imshow(orentiation_img[2,:,:], interpolation='nearest')
-                plt.show()
-                """
+                positional_img, Orentiation_img = grasps_to_spherical(available_grasps, positionalHemisphere,
+                                                                      Existing_grasps_list_o3d)
 
                 complete_img_data = np.concatenate((spherical_data_img, positional_img, orentiation_img),
                                                    axis=0)  # (8xResxRes)
-                img_list.append(complete_img_data)
-            img_collection[f] = img_list
-
-
-        else:
-
-            spherical_data_img = create_spherical_depth_data(obj_mesh_o3d_normalized)
-
-            available_grasps, positionalHemisphere, Existing_grasps_list_o3d = grasps_in_hemisphere(
-                successful_grasps_o3d, rotation=rotationsArray[i][0])
-
-            positional_img, Orentiation_img = grasps_to_spherical(available_grasps, positionalHemisphere,
-                                                                  Existing_grasps_list_o3d)
-
-            complete_img_data = np.concatenate((spherical_data_img, positional_img, orentiation_img),
-                                               axis=0)  # (8xResxRes)
-            img_collection[f] = complete_img_data
-
-        l = l + 1
-        print(l - 1)
-        if l == 10:
-            t1 = time.time()
-            print(t1 - t0)
-            break
+                img_collection[f] = complete_img_data
+            print(l)
+            if l % 10 == 0:
+                t1 = time.time()
+                print(t1 - t0)
+                with open(r'D:/Thesis/Thesis Code/Data_Created/Data_Spherical.pickle', 'wb') as handle:
+                    pickle.dump(img_collection, handle, protocol=pickle.HIGHEST_PROTOCOL)
+            l = l + 1
+        except:
+            print('issue with run on\n', f)
+            print('most likely dimensional mismatch due to einsum')
+            continue
+    return img_collection
 
 
 if __name__ == "__main__":
-    main()
+    img_collection = main()
+    print('final save')
+    with open(r'D:/Thesis/Thesis Code/Data_Created/Data_Spherical.pickle', 'wb') as handle:
+        pickle.dump(img_collection, handle, protocol=pickle.HIGHEST_PROTOCOL)
