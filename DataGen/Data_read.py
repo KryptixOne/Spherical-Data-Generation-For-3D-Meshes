@@ -127,6 +127,9 @@ if test1 == False:
         kde_skl = KernelDensity(bandwidth=bandwidth, **kwargs)
         kde_skl.fit(xy_train)
 
+        #kde_skl = KernelDensity(bandwidth=bandwidth, metric = 'haversine', **kwargs)
+        #kde_skl.fit(np.radians(xy_train))
+
         # score_samples() returns the log-likelihood of the samples
         z = np.exp(kde_skl.score_samples(xy_sample))  # Compute the log-likelihood of each sample under the model.
 
@@ -140,21 +143,24 @@ if test1 == False:
 
     x = xy_coords[:, 0]
     y = xy_coords[:, 1]
-    kernelsList = ['gaussian', 'tophat', 'epanechnikov', 'exponential', 'linear', 'cosine']
+    kernelsList3 = ['haversine', 'gaussian', 'tophat', 'epanechnikov', 'exponential', 'linear', 'cosine']
+    kernelsList2 = ['gaussian', 'tophat', 'epanechnikov', 'exponential', 'linear', 'cosine']
+    calc3d =False
 
-    for kern in kernelsList:
-        print('Theta Orientation; with kernal: ', kern)
-        xx, yy, zz,gg = kde3D(x, y, thetaVal, 1.0, kernel=kern)
-        fig, ax = plt.subplots(subplot_kw=dict(projection='3d'))
-        ax.scatter(xx, yy, zz, c=gg)
-        #plt.pcolormesh(xx, yy, zz)
-        # plt.scatter(x, y, s=2, facecolor='white')
-        plt.title(kern + ' 3D')
-        plt.show()
-        print('')
+    if calc3d == True:
+        for kern in kernelsList3:
+            print('Theta Orientation; with kernal: ', kern)
+            xx, yy, zz,gg = kde3D(x, y, thetaVal, 1.0, kernel=kern)
+            fig, ax = plt.subplots(subplot_kw=dict(projection='3d'))
+            ax.scatter(xx, yy, zz, c=gg)
+            #plt.pcolormesh(xx, yy, zz)
+            # plt.scatter(x, y, s=2, facecolor='white')
+            plt.title(kern + ' 3D')
+            plt.show()
+            print('')
 
     # for the position
-    for kern in kernelsList:
+    for kern in kernelsList2:
         print('Positional; with kernal: ', kern)
         xx, yy, zz = kde2D(x, y, 1.0, kernel=kern)
 
