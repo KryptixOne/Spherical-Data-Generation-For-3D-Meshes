@@ -144,12 +144,21 @@ print()
 """
 
 
-
 def Test_AIC_BIC_GMM_PositionalData(data_dict_Loc, NumRand, n_comp):
     """
-    :param data_dict_Loc  location string of the File holding data information
-    :param NumRand  number of random samples to obtain from the dictionary
-    :param n_comp  Max number of gaussian components
+    :param: data_dict_Loc  location string of the File holding data information
+    :param: NumRand  number of random samples to obtain from the dictionary
+    :param: n_comp  Max number of gaussian components
+
+    :return: averagedAIC, averagedBIC, n_components
+
+    example of how to plot the scores
+    plt.plot(n_components, averagedAIC, label='AIC')
+    plt.plot(n_components, averagedBIC, label='BIC')
+    plt.legend(loc='best')
+    plt.xlabel('n_components');
+
+
     """
     # get position data at a random rotation from a random mesh
     data = get_data_from_dict(data_dict_Loc)
@@ -174,20 +183,9 @@ def Test_AIC_BIC_GMM_PositionalData(data_dict_Loc, NumRand, n_comp):
         y = xy_coords[:, 1]
 
         xy_train = np.vstack([y, x]).T
-        """
-        try:
-            if len(xy_train) < len(n_components):
-                val = math.ceil(len(n_components) / len(xy_train))
-                xy_new = copy.deepcopy(xy_train)
-                for s in range(val):
-                    xy_train = np.vstack((xy_train, xy_new + 0.01 * (s + 1)))
-        except ZeroDivisionError:
-            lengthof = lengthof - 1
-            continue
-        """
 
         try:
-            models = [mixture.GaussianMixture(n, covariance_type='full', random_state=0).fit(xy_train)
+            models = [mixture.GaussianMixture(n, covariance_type='diag', random_state=0).fit(xy_train)
                       for n in n_components]
         except:
             lengthof = lengthof - 1
@@ -201,17 +199,93 @@ def Test_AIC_BIC_GMM_PositionalData(data_dict_Loc, NumRand, n_comp):
 
     return averagedAIC, summedBIC, n_components
 
-# for n_comp in n_components:
-#    gmm16 = mixture.GaussianMixture(n_components=n_comp, covariance_type='full', random_state=42)
-#    xx, yy, zz = GMM2D(x, y, gmm16)
-#    plt.pcolormesh(xx, yy, zz)
-#    plt.scatter(x, y, s=2, facecolor='white')
-#    plt.title('GMM with ' + str(n_comp) + ' gaussians')
-#    plt.show()
 
+#AIC, BIC, n_components = Test_AIC_BIC_GMM_PositionalData(location, 10, 21)
+print()
+
+complist = np.arange(1, 26)
+
+# dense dataset
+fig1, axs = plt.subplots(5, 5,figsize=(30,30))
+startx = 0
+starty = 0
+
+for n_comp in complist:
+    gmm16 = mixture.GaussianMixture(n_components=n_comp, covariance_type='diag', random_state=42)
+    #   plot_gmm(gmm16, xy_coords, label=False)
+    #   plt.title('number of components: ' + str(n_comp))
+    #   plt.show()
+
+    xx, yy, zz = GMM2D(x, y, gmm16)
+    axs[startx, starty].pcolormesh(xx, yy, zz)
+    #axs[startx, starty].scatter(x, y, s=2, facecolor='white')
+    #axs[startx, starty].set_title('Dense DS: GMM with ' + str(n_comp) + ' gaussians')
+
+    #print(startx,starty )
+    if starty % 4 == 0 and starty != 0:
+        starty = 0
+        startx = startx + 1
+    else:
+        starty = starty + 1
+
+    # plt.pcolormesh(xx, yy, zz)
+    # plt.scatter(x, y, s=2, facecolor='white')
+    # plt.title('GMM with ' + str(n_comp) + ' gaussians')
+plt.tight_layout()
+plt.show()
+
+data = get_data_from_dict(location)
+number_of_random = 10
+data_pos_list = [np.asarray(random.choice(list(data.values())))[random.randrange(6), 1, :, :] for i in
+                 range(number_of_random)]
+
+# create new comparison with more sparse data
+l =5 # can be chosen to be any from the random list that is sparse
+pos = data_pos_list[l]
+
+xy_coords = np.flip(np.column_stack(np.where(pos > 0)), axis=1)
+xy_coords1 = np.flip(np.column_stack(np.where(pos > 1)), axis=1)
+
+if xy_coords1.size == 0:
+    pass
+else:
+    xy_coords = np.concatenate((xy_coords, xy_coords1 + 0.1), axis=0)
+
+x = xy_coords[:, 0]
+y = xy_coords[:, 1]
+
+fig2, axs1 = plt.subplots(5, 5,figsize=(30,30))
+startx = 0
+starty = 0
+for n_comp in complist:
+    gmm16 = mixture.GaussianMixture(n_components=n_comp, covariance_type='diag', random_state=42)
+    # plot_gmm(gmm16, xy_coords, label=False)
+    # plt.title(str(n_comp))
+    # plt.show()
+
+
+    xx, yy, zz = GMM2D(x, y, gmm16)
+    axs1[startx, starty].pcolormesh(xx, yy, zz)
+    plt.xlim(xmin=0)
+    plt.ylim(ymin=0)
+    # axs[startx, starty].scatter(x, y, s=2, facecolor='white')
+    # axs[startx, starty].set_title('Dense DS: GMM with ' + str(n_comp) + ' gaussians')
+
+    # print(startx,starty )
+    if starty % 4 == 0 and starty != 0:
+        starty = 0
+        startx = startx + 1
+    else:
+        starty = starty + 1
+
+    #plt.pcolormesh(xx, yy, zz)
+    #plt.scatter(x, y, s=2, facecolor='white')
+    #plt.title('GMM with ' + str(n_comp) + ' gaussians')
+plt.tight_layout()
+plt.show()
 
 # 3D
-# gmm16 = mixture.GaussianMixture(n_components=12, covariance_type='full', random_state=42)
+gmm16 = mixture.GaussianMixture(n_components=12, covariance_type='full', random_state=42)
 # xx, yy, zz, gg = GMM3D(x, y, thetaVal, gmm16)
 # fig, ax = plt.subplots(subplot_kw=dict(projection='3d'))
 # ax.scatter(yy, xx, zz, c=gg)
