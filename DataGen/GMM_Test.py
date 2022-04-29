@@ -9,6 +9,11 @@ import math
 import copy
 
 location = r'D:/Thesis/Thesis Code/Data_Created/Data_Spherical.pickle'
+create_GMM_photos2D = False
+create_GMM_photos3D = False
+create_GMM_5D = True
+create_AIC_BIC = False
+
 # reading from example files for programming
 
 depth = np.loadtxt('depthEx.txt')
@@ -79,10 +84,10 @@ def plot_gmm(gmm, X, label=True, ax=None):
 
     w_factor = 0.2 / gmm.weights_.max()
     for pos, covar, w in zip(gmm.means_, gmm.covariances_, gmm.weights_):
-        draw_ellipse(pos, covar, alpha=w * w_factor)
+        draw_ellipse(pos, covar, alpha=w * w_factor) # alpha sets transparency of the patch
 
 
-def GMM2D(x, y, gmm, xbins=60j, ybins=60j, **kwargs):
+def GMM2D(x, y, gmm, xbins=60j, ybins=60j):
     """Build 2D kernel density estimate (KDE)."""
 
     # create grid of sample locations (default: 100x100)
@@ -99,7 +104,7 @@ def GMM2D(x, y, gmm, xbins=60j, ybins=60j, **kwargs):
     return xx, yy, np.reshape(z, xx.shape)
 
 
-def GMM3D(x, y, z, gmm, xbins=60j, ybins=60j, zbins=60j, **kwargs):
+def GMM3D(x, y, z, gmm, xbins=60j, ybins=60j, zbins=60j):
     """Build 3D kernel density estimate (KDE)."""
 
     # create grid of sample locations (default: 100x100)
@@ -118,30 +123,23 @@ def GMM3D(x, y, z, gmm, xbins=60j, ybins=60j, zbins=60j, **kwargs):
     return xx, yy, zz, np.reshape(gamma, xx.shape)
 
 
-# Moon Ex
-# Xmoon, Ymoon = make_moons(200, noise=0.05, random_state=42)
-# plt.scatter(Xmoon[:, 0], Xmoon[:, 1])
-# plt.show()
+def GMM5D(x, y, theta, phi, gamma, gmm, xbins=60j, ybins=60j, thetabins=60j, phibins=60j, gammabins=60j):
+    """
+    since not able to be visualized, only the liklihoods are returned, along with the fitted gmm
+    """
+    #xx, yy, tt, pp, gg = np.mgrid[x.min():x.max():xbins,
+    #                     y.min():y.max():ybins,
+    #                     -180:180:thetabins,
+    #                     -180:180:phibins,
+    #                     -180:180:gammabins]
+    #sampleVals = np.vstack([yy.ravel(), xx.ravel(), tt.ravel(), pp.ravel(), gg.ravel() ]).T
+    trainVals = np.vstack([y,x,theta,phi,gamma]).T
 
-# gmm16 = mixture.GaussianMixture(n_components=12, covariance_type='full', random_state=42)
-# plot_gmm(gmm16, Xmoon, label=False)
-# plt.show()
+    gmm.fit(trainVals)
 
-# 2D
-"""
-n_components  = np.arange(1,21)
-xy_train = np.vstack([y, x]).T
-models = [mixture.GaussianMixture(n, covariance_type='full', random_state=0).fit(xy_train)
-          for n in n_components]
-plt.plot(n_components, [m.bic(xy_train) for m in models], label='BIC')
-plt.plot(n_components, [m.aic(xy_train) for m in models], label='AIC')
-plt.legend(loc='best')
-plt.xlabel('n_components');
+    log_liklihoods = gmm.score_samples(trainVals)  # Compute the log-likelihood of each sample under the model.
 
-plt.show()
-
-print()
-"""
+    return log_liklihoods, gmm
 
 
 def Test_AIC_BIC_GMM_PositionalData(data_dict_Loc, NumRand, n_comp):
@@ -200,98 +198,151 @@ def Test_AIC_BIC_GMM_PositionalData(data_dict_Loc, NumRand, n_comp):
     return averagedAIC, summedBIC, n_components
 
 
-#AIC, BIC, n_components = Test_AIC_BIC_GMM_PositionalData(location, 10, 21)
-print()
+if create_AIC_BIC == True:
+    AIC, BIC, n_components = Test_AIC_BIC_GMM_PositionalData(location, 10, 21)
 
-complist = np.arange(1, 26)
+if create_GMM_photos2D == True:
+    complist = np.arange(1, 26)
+    # dense dataset
+    fig1, axs = plt.subplots(5, 5, figsize=(30, 30))
+    startx = 0
+    starty = 0
 
-# dense dataset
-fig1, axs = plt.subplots(5, 5,figsize=(30,30))
-startx = 0
-starty = 0
+    for n_comp in complist:
+        gmm16 = mixture.GaussianMixture(n_components=n_comp, covariance_type='diag', random_state=42)
+        #   plot_gmm(gmm16, xy_coords, label=False)
+        #   plt.title('number of components: ' + str(n_comp))
+        #   plt.show()
 
-for n_comp in complist:
-    gmm16 = mixture.GaussianMixture(n_components=n_comp, covariance_type='diag', random_state=42)
-    #   plot_gmm(gmm16, xy_coords, label=False)
-    #   plt.title('number of components: ' + str(n_comp))
-    #   plt.show()
+        xx, yy, zz = GMM2D(x, y, gmm16)
+        axs[startx, starty].pcolormesh(xx, yy, zz)
+        # axs[startx, starty].scatter(x, y, s=2, facecolor='white')
+        # axs[startx, starty].set_title('Dense DS: GMM with ' + str(n_comp) + ' gaussians')
 
-    xx, yy, zz = GMM2D(x, y, gmm16)
-    axs[startx, starty].pcolormesh(xx, yy, zz)
-    #axs[startx, starty].scatter(x, y, s=2, facecolor='white')
-    #axs[startx, starty].set_title('Dense DS: GMM with ' + str(n_comp) + ' gaussians')
+        # print(startx,starty )
+        if starty % 4 == 0 and starty != 0:
+            starty = 0
+            startx = startx + 1
+        else:
+            starty = starty + 1
 
-    #print(startx,starty )
-    if starty % 4 == 0 and starty != 0:
-        starty = 0
-        startx = startx + 1
+        # plt.pcolormesh(xx, yy, zz)
+        # plt.scatter(x, y, s=2, facecolor='white')
+        # plt.title('GMM with ' + str(n_comp) + ' gaussians')
+    plt.tight_layout()
+    plt.show()
+
+    data = get_data_from_dict(location)
+    number_of_random = 10
+    data_pos_list = [np.asarray(random.choice(list(data.values())))[random.randrange(6), 1, :, :] for i in
+                     range(number_of_random)]
+
+    # create new comparison with more sparse data
+    l = 5  # can be chosen to be any from the random list that is sparse
+    pos = data_pos_list[l]
+
+    xy_coords = np.flip(np.column_stack(np.where(pos > 0)), axis=1)
+    xy_coords1 = np.flip(np.column_stack(np.where(pos > 1)), axis=1)
+
+    if xy_coords1.size == 0:
+        pass
     else:
-        starty = starty + 1
+        xy_coords = np.concatenate((xy_coords, xy_coords1 + 0.1), axis=0)
 
-    # plt.pcolormesh(xx, yy, zz)
-    # plt.scatter(x, y, s=2, facecolor='white')
-    # plt.title('GMM with ' + str(n_comp) + ' gaussians')
-plt.tight_layout()
-plt.show()
+    x = xy_coords[:, 0]
+    y = xy_coords[:, 1]
 
-data = get_data_from_dict(location)
-number_of_random = 10
-data_pos_list = [np.asarray(random.choice(list(data.values())))[random.randrange(6), 1, :, :] for i in
-                 range(number_of_random)]
+    fig2, axs1 = plt.subplots(5, 5, figsize=(30, 30))
+    startx = 0
+    starty = 0
 
-# create new comparison with more sparse data
-l =5 # can be chosen to be any from the random list that is sparse
-pos = data_pos_list[l]
+    for n_comp in complist:
+        gmm16 = mixture.GaussianMixture(n_components=n_comp, covariance_type='full', random_state=42)
+        # plot_gmm(gmm16, xy_coords, label=False)
+        # plt.title(str(n_comp))
+        # plt.show()
 
-xy_coords = np.flip(np.column_stack(np.where(pos > 0)), axis=1)
-xy_coords1 = np.flip(np.column_stack(np.where(pos > 1)), axis=1)
-
-if xy_coords1.size == 0:
-    pass
-else:
-    xy_coords = np.concatenate((xy_coords, xy_coords1 + 0.1), axis=0)
-
-x = xy_coords[:, 0]
-y = xy_coords[:, 1]
-
-fig2, axs1 = plt.subplots(5, 5,figsize=(30,30))
-startx = 0
-starty = 0
-for n_comp in complist:
-    gmm16 = mixture.GaussianMixture(n_components=n_comp, covariance_type='diag', random_state=42)
-    # plot_gmm(gmm16, xy_coords, label=False)
-    # plt.title(str(n_comp))
-    # plt.show()
-
-
-    xx, yy, zz = GMM2D(x, y, gmm16)
-    axs1[startx, starty].pcolormesh(xx, yy, zz)
-    plt.xlim(xmin=0)
-    plt.ylim(ymin=0)
-    # axs[startx, starty].scatter(x, y, s=2, facecolor='white')
-    # axs[startx, starty].set_title('Dense DS: GMM with ' + str(n_comp) + ' gaussians')
-
-    # print(startx,starty )
-    if starty % 4 == 0 and starty != 0:
-        starty = 0
-        startx = startx + 1
-    else:
-        starty = starty + 1
-
-    #plt.pcolormesh(xx, yy, zz)
-    #plt.scatter(x, y, s=2, facecolor='white')
-    #plt.title('GMM with ' + str(n_comp) + ' gaussians')
-plt.tight_layout()
-plt.show()
+        xx, yy, zz = GMM2D(x, y, gmm16)
+        axs1[startx, starty].pcolormesh(xx, yy, zz)
+        plt.xlim(xmin=0)
+        plt.ylim(ymin=0)
+        if starty % 4 == 0 and starty != 0:
+            starty = 0
+            startx = startx + 1
+        else:
+            starty = starty + 1
+    plt.tight_layout()
+    plt.show()
 
 # 3D
-gmm16 = mixture.GaussianMixture(n_components=12, covariance_type='full', random_state=42)
-# xx, yy, zz, gg = GMM3D(x, y, thetaVal, gmm16)
-# fig, ax = plt.subplots(subplot_kw=dict(projection='3d'))
-# ax.scatter(yy, xx, zz, c=gg)
-# plt.show()
+if create_GMM_photos3D == True:
+
+    complist = np.arange(1, 26)
+    # dense dataset
+    fig2, axs = plt.subplots(5, 5, figsize=(30, 30), subplot_kw=dict(projection='3d'))
+    startx = 0
+    starty = 0
+
+    for n_comp in complist:
+        gmm16 = mixture.GaussianMixture(n_components=n_comp, covariance_type='full', random_state=42)
+        xx, yy, zz, gg = GMM3D(x, y, thetaVal, gmm16)
+        axs[startx, starty].scatter(yy, xx, zz, c=gg)
+
+        if starty % 4 == 0 and starty != 0:
+            starty = 0
+            startx = startx + 1
+        else:
+            starty = starty + 1
+
+    plt.tight_layout()
+    plt.show()
+    print()
+
+if create_GMM_5D == True:
+    n_comp = 12
+    #complist = np.arange(1, 26)
+    #for n_comp in complist:
+    gmm16 = mixture.GaussianMixture(n_components=n_comp, covariance_type='full', random_state=42)
+    log_liklihoods, fittedgmm = GMM5D(x,y,thetaVal,phiVal,rotVal,gmm16)
+    print()
+
 
 # Xnew = gmm16.sample(400)
 # Xnew = Xnew[0]
 # plt.scatter(Xnew[:, 0], Xnew[:, 1]);
 # plt.show()
+
+"""
+#creating GMM given covariance matrices, means and 
+## Generate synthetic data
+N,D = 1000, 2 # number of points and dimenstinality
+
+if D == 2:
+    #set gaussian ceters and covariances in 2D
+    means = np.array([[0.5, 0.0],
+                      [0, 0],
+                      [-0.5, -0.5],
+                      [-0.8, 0.3]])
+    covs = np.array([np.diag([0.01, 0.01]),
+                     np.diag([0.025, 0.01]),
+                     np.diag([0.01, 0.025]),
+                     np.diag([0.01, 0.01])])
+elif D == 3:
+    # set gaussian ceters and covariances in 3D
+    means = np.array([[0.5, 0.0, 0.0],
+                      [0.0, 0.0, 0.0],
+                      [-0.5, -0.5, -0.5],
+                      [-0.8, 0.3, 0.4]])
+    covs = np.array([np.diag([0.01, 0.01, 0.03]),
+                     np.diag([0.08, 0.01, 0.01]),
+                     np.diag([0.01, 0.05, 0.01]),
+                     np.diag([0.03, 0.07, 0.01])])
+n_gaussians = means.shape[0]
+#Next, we generate points using a multivariate normal distribution for
+
+points = []
+for i in range(len(means)):
+    x = np.random.multivariate_normal(means[i], covs[i], N )
+    points.append(x)
+points = np.concatenate(points)
+"""
