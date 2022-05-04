@@ -3,13 +3,14 @@
 
 Using ShapeNet and the Acroynm Datasets (depicted below), we create a spherical representation of the data through hemispherical radial ray-casting
 
-
-<img src="https://github.com/KryptixOne/Spherical-Data-Generation-For-3D-Meshes/blob/main/Images/DatasetGraspsOnMesh_Acronym.PNG" width="300" />
 Example ShapeNet + Acroynm baseline representation
+<img src="https://github.com/KryptixOne/Spherical-Data-Generation-For-3D-Meshes/blob/main/Images/DatasetGraspsOnMesh_Acronym.PNG" width="300" />
+
 
 
 See below an example of sphere enclosing object. Sphere displays ray-casting origin points.
 Note that only a hemisphere is used during data creation
+
 <img src="https://github.com/KryptixOne/Spherical-Data-Generation-For-3D-Meshes/blob/main/Images/SphereAroundScaledPC.PNG" width="300" />
 
 
