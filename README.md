@@ -4,6 +4,7 @@
 Using ShapeNet and the Acroynm Datasets (depicted below), we create a spherical representation of the data through hemispherical radial ray-casting
 
 Example ShapeNet + Acroynm baseline representation
+
 <img src="https://github.com/KryptixOne/Spherical-Data-Generation-For-3D-Meshes/blob/main/Images/DatasetGraspsOnMesh_Acronym.PNG" width="300" />
 
 
@@ -17,7 +18,7 @@ Note that only a hemisphere is used during data creation
 
 ## Resulting Data:
 
-###### Resulting Data is a spherical projection of the 3-D meshes.
+### Resulting Data is a spherical projection of the 3-D meshes.
 
 The Data is organized as follows:
 
@@ -33,6 +34,7 @@ Image below shows the Grasp positional data, where points correspond to the near
 
 * * Note that for the following orientation data. The values at each plotted position are based on the spherical coordinate system. To identify plane of rotation, 
 grasp vector and orgination ray vector are used * * 
+
 **Channel 3:** Spherical Theta Value --> Used to obtain orientation of grasp
 
 <img src="https://github.com/KryptixOne/Spherical-Data-Generation-For-3D-Meshes/blob/main/Images/CreatedGraspDataImages/OreintationThetas.png" width="300" />
@@ -46,7 +48,7 @@ grasp vector and orgination ray vector are used * *
 <img src="https://github.com/KryptixOne/Spherical-Data-Generation-For-3D-Meshes/blob/main/Images/CreatedGraspDataImages/Orientation_Rotation.png" width="300" />
 
 
-###### Gaussian Mixture Models representations of data:
+### Gaussian Mixture Models representations of data:
 
 A primary objective of this dataset is to create a probability mapping of the position and orientation data. To do so, Gaussian mixture models were implemented.
 
