@@ -1,5 +1,5 @@
 Dataset creation using the Acroynm and ShapeNet Datasets. Together, we are capable of forming a grasp/mesh object which is the baseline used for creating this dataset.
-![]https://github.com/KryptixOne/Spherical-Data-Generation-For-3D-Meshes/blob/main/Images/DatasetGraspsOnMesh_Acronym.PNG
+![](https://github.com/KryptixOne/Spherical-Data-Generation-For-3D-Meshes/blob/main/Images/DatasetGraspsOnMesh_Acronym.PNG)
 
 
 Resulting Data is a spherical projection of the 3-D meshes.
