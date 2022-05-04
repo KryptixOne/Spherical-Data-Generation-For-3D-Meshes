@@ -48,7 +48,7 @@ grasp vector and orgination ray vector are used * *
 <img src="https://github.com/KryptixOne/Spherical-Data-Generation-For-3D-Meshes/blob/main/Images/CreatedGraspDataImages/Orientation_Rotation.png" width="500" />
 
 
-### Gaussian Mixture Models representations of data:
+### Gaussian Mixture Models (n_components) representations of data:
 
 A primary objective of this dataset is to create a probability mapping of the position and orientation data. To do so, Gaussian mixture models were implemented.
 
