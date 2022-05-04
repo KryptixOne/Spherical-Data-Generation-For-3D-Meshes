@@ -44,16 +44,18 @@ grasp vector and orgination ray vector are used * *
 
 A primary objective of this dataset is to create a probability mapping of the position and orientation data. To do so, Gaussian mixture models were implemented.
 
-Dense Raw Data
+**Dense Raw Data**
+<img src="https://github.com/KryptixOne/Spherical-Data-Generation-For-3D-Meshes/blob/main/Images/GMM_test_results/Dense_raw.PNG" width="300" />
 
-GMM Dense Data Positional
-https://github.com/KryptixOne/Spherical-Data-Generation-For-3D-Meshes/blob/main/Images/GMM_test_results/DenseData_components.png" width="600" />
+**GMM Dense Data Positional**
+<img src="https://github.com/KryptixOne/Spherical-Data-Generation-For-3D-Meshes/blob/main/Images/GMM_test_results/DenseData_components.png" width="600" />
 
-GMM Dense Data 3D
-https://github.com/KryptixOne/Spherical-Data-Generation-For-3D-Meshes/blob/main/Images/GMM_test_results/Dense_3D_data_components.png" width="600" />
+**GMM Dense Data 3D**
+<img src="https://github.com/KryptixOne/Spherical-Data-Generation-For-3D-Meshes/blob/main/Images/GMM_test_results/Dense_3D_data_components.png" width="600" />
 
-Sparse Data Positional:
-https://github.com/KryptixOne/Spherical-Data-Generation-For-3D-Meshes/blob/main/Images/GMM_test_results/sparseData.png" width="300" />
-GMM Sparse Data Positional
-https://github.com/KryptixOne/Spherical-Data-Generation-For-3D-Meshes/blob/main/Images/GMM_test_results/SparseDataGMM.png" width="600" />
+**Sparse Data Positional**
+<img src="https://github.com/KryptixOne/Spherical-Data-Generation-For-3D-Meshes/blob/main/Images/GMM_test_results/sparseData.png" width="300" />
+
+**GMM Sparse Data Positional**
+<img src="https://github.com/KryptixOne/Spherical-Data-Generation-For-3D-Meshes/blob/main/Images/GMM_test_results/SparseDataGMM.png" width="600" />
 
