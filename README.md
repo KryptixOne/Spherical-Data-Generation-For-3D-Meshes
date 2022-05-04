@@ -32,8 +32,8 @@ Image below shows the Grasp positional data, where points correspond to the near
 
 <img src="https://github.com/KryptixOne/Spherical-Data-Generation-For-3D-Meshes/blob/main/Images/CreatedGraspDataImages/PositionalGripperData.png" width="500" />
 
-* Note that for the following orientation data. The values at each plotted position are based on the spherical coordinate system. To identify plane of rotation, 
-grasp vector and orgination ray vector are used * 
+_Note that for the following orientation data. The values at each plotted position are based on the spherical coordinate system. To identify plane of rotation, 
+grasp vector and orgination ray vector are used_
 
 **Channel 3:** Spherical Theta Value --> Used to obtain orientation of grasp
 
