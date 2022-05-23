@@ -31,8 +31,13 @@ for x in range(len(firstObj)):
     plt.show()
 """
 
+
+
+
 # reading from example files for programming
 test1 = False
+
+
 depth = np.loadtxt('depthEx.txt')
 position = np.loadtxt('positionEx.txt')
 orientationTheta = np.loadtxt('orientationPhi.txt')

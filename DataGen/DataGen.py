@@ -404,14 +404,13 @@ def as_mesh(scene_or_mesh):
 
     return mesh
 
-
 def main():
     import time
     t0 = time.time()
     num_grasps_to_display = 100
     num_of_rotations = 10
     randomized_rotation = False
-    resolution = 60
+    resolution =120
     rotational_degree = 60  # degree of rotation for hemisphere
     directoryForMeshes = 'D:/Thesis/Data/OrigData'
     directoryForGrasps = 'D:/Thesis/Data/OrigData/grasps'
@@ -523,8 +522,12 @@ def main():
             if l % 10 == 0:
                 t1 = time.time()
                 print(t1 - t0)
-                with open(r'D:/Thesis/Thesis Code/Data_Created/Data_Spherical.pickle', 'wb') as handle:
+                with open(r'D:/Thesis/Thesis Code/Data_Created/Data_Spherical_No_Pmaps120.pickle', 'wb') as handle:
                     pickle.dump(img_collection, handle, protocol=pickle.HIGHEST_PROTOCOL)
+            if l%100 ==0:
+                with open(r'D:/Thesis/Thesis Code/DataBackup/Data_Spherical_No_Pmaps120.pickle', 'wb') as handle:
+                    pickle.dump(img_collection, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
             l = l + 1
         except:
             print('issue with run on\n', f)
@@ -536,5 +539,5 @@ def main():
 if __name__ == "__main__":
     img_collection = main()
     print('final save')
-    with open(r'D:/Thesis/Thesis Code/Data_Created/Data_Spherical.pickle', 'wb') as handle:
+    with open(r'D:/Thesis/Thesis Code/Data_Created/Data_Spherical_No_Pmaps.pickle', 'wb') as handle:
         pickle.dump(img_collection, handle, protocol=pickle.HIGHEST_PROTOCOL)
