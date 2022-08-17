@@ -98,14 +98,14 @@ if test1 == True:
 from sklearn.neighbors import KernelDensity
 
 if test1 == False:
-
-    def kde3D(x, y, z, bandwidth, xbins=100j, ybins=100j, zbins=100j, ** kwargs):
+    #(x, y, thetaVal, 1.0, kernel=kern)
+    def kde3D(x, y, z, bandwidth, xbins=60j, ybins=60j, zbins=180j, ** kwargs):
         """Build 3D kernel density estimate (KDE)."""
 
         # create grid of sample locations (default: 100x100)
-        xx, yy, zz = np.mgrid[x.min():x.max():xbins,
-                     y.min():y.max():ybins,
-                     z.min():z.max():zbins]
+        xx, yy, zz = np.mgrid[0:60:xbins,
+                     0:60:ybins,
+                     -180:180:zbins]
 
         xy_sample = np.vstack([yy.ravel(), xx.ravel(),zz.ravel()]).T
         xy_train = np.vstack([y, x, z]).T
@@ -148,20 +148,31 @@ if test1 == False:
 
     x = xy_coords[:, 0]
     y = xy_coords[:, 1]
-    kernelsList3 = ['haversine', 'gaussian', 'tophat', 'epanechnikov', 'exponential', 'linear', 'cosine']
+    #kernelsList3 = ['haversine', 'gaussian', 'tophat', 'epanechnikov', 'exponential', 'linear', 'cosine']
+    kernelsList3 = ['gaussian']
     kernelsList2 = ['gaussian', 'tophat', 'epanechnikov', 'exponential', 'linear', 'cosine']
-    calc3d =False
+    calc3d =True
+    plotData3d = False
 
     if calc3d == True:
         for kern in kernelsList3:
             print('Theta Orientation; with kernal: ', kern)
-            xx, yy, zz,gg = kde3D(x, y, thetaVal, 1.0, kernel=kern)
-            fig, ax = plt.subplots(subplot_kw=dict(projection='3d'))
-            ax.scatter(xx, yy, zz, c=gg)
-            #plt.pcolormesh(xx, yy, zz)
-            # plt.scatter(x, y, s=2, facecolor='white')
-            plt.title(kern + ' 3D')
-            plt.show()
+            xx, yy, zz,gg = kde3D(x, y, thetaVal, 3.0, kernel=kern,zbins=720j)
+            if plotData3d == True:
+                fig, ax = plt.subplots(subplot_kw=dict(projection='3d'))
+                ax.scatter(xx, yy, zz, c=gg)
+                #plt.pcolormesh(xx, yy, zz)
+                # plt.scatter(x, y, s=2, facecolor='white')
+                plt.title(kern + ' 3D')
+                plt.show()
+            else:
+                # Creates orientation Pmap and estimated angles
+                orientationTheta_Heatmap = np.max(gg,axis=2)
+                orientationTheta_Heatmap = orientationTheta_Heatmap* 1/np.max(orientationTheta_Heatmap)
+                #if probability of existance is unlikely, results in filtering
+                filterIdx = (orientationTheta_Heatmap> 0.1).astype(int)
+                orientationTheta_AngleValues = np.argmax(gg,axis =2)/ 2  -180 # -180 to values since angle is from -180 to 180
+                filtered_angles = orientationTheta_AngleValues* filterIdx
             print('')
 
     # for the position
