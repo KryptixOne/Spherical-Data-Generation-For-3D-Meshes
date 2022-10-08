@@ -31,7 +31,7 @@ def Create_data(keylist, b, inputString):
         gamma = np.exp(kde_skl.score_samples(xy_sample))  # Compute the log-likelihood of each sample under the model.
 
         return np.reshape(gamma, xx.shape)
-
+#fig = plt.pcolormesh(xx, yy, zz, cmap='gray')
     def kde2D(x, y, KDE, xbins=60j, ybins=60j):
         """Build 2D kernel density estimate (KDE)."""
 
@@ -70,7 +70,7 @@ def Create_data(keylist, b, inputString):
     l = 0
     dict_with_heatmaps = {}
     Use_GMM = False
-    Create_Orientation_Data = False
+    Create_Orientation_Data = True
     for item in range(len(keylist)):
         newList = []
         for x in range(6):
