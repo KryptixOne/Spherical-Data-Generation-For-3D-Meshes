@@ -9,10 +9,9 @@ import copy
 from sklearn.neighbors import KernelDensity
 
 
-
-
 def Create_data(keylist, b, inputString):
     print(inputString)
+
     def kde3D(x, y, z, bandwidth, xbins=60j, ybins=60j, zbins=180j, **kwargs):
         """Build 3D kernel density estimate (KDE)."""
 
@@ -31,7 +30,8 @@ def Create_data(keylist, b, inputString):
         gamma = np.exp(kde_skl.score_samples(xy_sample))  # Compute the log-likelihood of each sample under the model.
 
         return np.reshape(gamma, xx.shape)
-#fig = plt.pcolormesh(xx, yy, zz, cmap='gray')
+
+    # fig = plt.pcolormesh(xx, yy, zz, cmap='gray')
     def kde2D(x, y, KDE, xbins=60j, ybins=60j):
         """Build 2D kernel density estimate (KDE)."""
 
@@ -73,7 +73,7 @@ def Create_data(keylist, b, inputString):
     Create_Orientation_Data = True
     for item in range(len(keylist)):
         newList = []
-        for x in range(6):
+        for x in range(len(b[keylist[item]])):
             currobj = b[keylist[item]][x]  # 5x60x60
             currpos = currobj[1, :, :]  # position object
             xy_coords = np.flip(np.column_stack(np.where(currpos > 0)), axis=1)
@@ -87,8 +87,10 @@ def Create_data(keylist, b, inputString):
             xy_train = np.vstack([y, x]).T
 
             # position Pmap Creation
+            #0.75 for meta labels on task data
+            #3 for training meta labels
 
-            kde_skl = KernelDensity(bandwidth=3)  # Change bandwidth to effect smoothing
+            kde_skl = KernelDensity(bandwidth=0.75)  # Change bandwidth to effect smoothing
             try:
                 kde_skl.fit(xy_train)
                 # xx, yy, zz = kde2D(x, y, kde_skl, xbins=100j, ybins=100j)
@@ -115,7 +117,7 @@ def Create_data(keylist, b, inputString):
                 fig = plt.pcolormesh(xx, yy, zz, cmap='gray')
             else:
                 xx, yy, zz = kde2D(x, y, kde_skl)
-                fig = plt.pcolormesh(xx, yy, zz, cmap='gray')
+                fig = plt.pcolormesh(xx, yy, zz)
 
             # arr = fig.get_array()
             # arres = arr.reshape(60, 60)
@@ -144,8 +146,9 @@ def Create_data(keylist, b, inputString):
                     thetaVal = np.concatenate((thetaVal, theta2))
                     phiVal = np.concatenate((phiVal, phi2))
                     rotVal = np.concatenate((rotVal, rot2))
-
-                gg = kde3D(x, y, thetaVal, 3.0, kernel='gaussian', zbins=720j)
+                #0.75 for meta test
+                #3 for meta training
+                gg = kde3D(x, y, thetaVal, 0.75, kernel='gaussian', zbins=720j)
 
                 # Creates orientation Pmap and estimated angles
                 orientationTheta_Heatmap = np.max(gg, axis=2)
@@ -160,7 +163,7 @@ def Create_data(keylist, b, inputString):
                 orientationTheta_Heatmap[orientationTheta_Heatmap < 0.1] = 0
                 orientationTheta_Heatmap = orientationTheta_Heatmap.T
 
-                gg = kde3D(x, y, phiVal, 3.0, kernel='gaussian', zbins=720j)
+                gg = kde3D(x, y, phiVal, 0.75, kernel='gaussian', zbins=720j)
                 # Creates orientation Pmap and estimated angles
                 orientationPhi_Heatmap = np.max(gg, axis=2)
                 orientationPhi_Heatmap = orientationPhi_Heatmap * 1 / np.max(orientationPhi_Heatmap)
@@ -173,7 +176,7 @@ def Create_data(keylist, b, inputString):
                 orientationPhi_Heatmap[orientationPhi_Heatmap < 0.1] = 0
                 orientationPhi_Heatmap = orientationPhi_Heatmap.T
 
-                gg = kde3D(x, y, rotVal, 3.0, kernel='gaussian', zbins=720j)
+                gg = kde3D(x, y, rotVal, 0.75, kernel='gaussian', zbins=720j)
                 # Creates orientation Pmap and estimated angles
                 orientationGamma_Heatmap = np.max(gg, axis=2)
                 orientationGamma_Heatmap = orientationGamma_Heatmap * 1 / np.max(orientationGamma_Heatmap)
@@ -189,7 +192,7 @@ def Create_data(keylist, b, inputString):
                 arr = fig.get_array()
                 arres = arr.reshape(60, 60)
                 arr_np = np.asarray(arres).T
-                newobj = np.concatenate((currobj, np.expand_dims(arr_np, axis=0)), axis=0)  # POSITIONAL HEATMAP
+                newobj = np.concatenate((currobj, np.expand_dims(arr_np, axis=0)), axis=0)  # adds the POSITIONAL HEATMAP
 
                 newobj = np.concatenate((newobj, np.expand_dims(filtered_angles_Theta, axis=0)),
                                         axis=0)  # theta angle Data
@@ -210,20 +213,62 @@ def Create_data(keylist, b, inputString):
 
         # dict_with_heatmaps[keylist[item]] = newList
 
-        with open(r'D:/Thesis/Thesis Code/Data_Created/DataWithOrientationHM/' + str(keylist[item])[:-3] + '.pickle',
+        with open(r'D:/Thesis/HumanDemonstrated/HumanDemonstrated_withKDE/Tooluse/' + str(keylist[item])[7:-3] + '.pickle',
                   'wb') as handle:
             newList = np.asarray(newList)
             pickle.dump(newList, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
         print('saved ' + str(keylist[item]))
 
+
 if __name__ == '__main__':
     import multiprocessing
     from random import shuffle
-    multitask = False
+    import os
+    from os.path import isfile, join
 
-    with open(r'D:/Thesis/Thesis Code/DataToWorkWith/Data_Spherical_No_Pmaps60.pickle', 'rb') as handle:
-        b = pickle.load(handle)
+    multitask = False
+    pouring = False
+    Tooluse = True
+    handover = False
+    directoryForPouringGrasps = r'D:/Thesis/HumanDemonstrated/Pouring/grasps'
+    directoryForToolUseGrasps = r'D:/Thesis/HumanDemonstrated/ToolUse/grasps'
+    directoryForHandoverGrasps = r'D:/Thesis/HumanDemonstrated/Handover/grasps'
+    # pouring
+    if (pouring == True) and (Tooluse == False) and (handover == False):
+        pouringFiles = [f for f in os.listdir(directoryForPouringGrasps) if isfile(join(directoryForPouringGrasps, f))]
+        pouringDict = {}
+        for x in pouringFiles:
+            with open(r'D:/Thesis/HumanDemonstrated/Pouring/grasps/' + str(x), 'rb') as handle:
+                b = pickle.load(handle)
+            pouringDict = {**pouringDict, **b}
+        b = pouringDict
+
+    # Tooluse
+    if (pouring == False) and (Tooluse == True) and (handover == False):
+        TooluseFiles = [f for f in os.listdir(directoryForToolUseGrasps) if isfile(join(directoryForToolUseGrasps, f))]
+        ToolUseDict = {}
+        for x in TooluseFiles:
+            with open(r'D:/Thesis/HumanDemonstrated/ToolUse/grasps/' + str(x), 'rb') as handle:
+                b = pickle.load(handle)
+            ToolUseDict = {**ToolUseDict, **b}
+        b = ToolUseDict
+
+    # handover
+    if (pouring == False) and (Tooluse == False) and (handover == True):
+        HandoverFiles = [f for f in os.listdir(directoryForHandoverGrasps) if
+                         isfile(join(directoryForHandoverGrasps, f))]
+        HandoverDict = {}
+        for x in HandoverFiles:
+            with open(r'D:/Thesis/HumanDemonstrated/Handover/grasps/' + str(x), 'rb') as handle:
+                b = pickle.load(handle)
+            pouringDict = {**HandoverDict, **b}
+        b = HandoverDict
+
+    # original general creation
+    if (pouring == False) and (Tooluse == False) and (handover == False):
+        with open(r'D:/Thesis/Thesis Code/DataToWorkWith/Data_Spherical_No_Pmaps60.pickle', 'rb') as handle:
+            b = pickle.load(handle)
 
     keylist = list(b.keys())
 
@@ -241,7 +286,7 @@ if __name__ == '__main__':
         p1.join()
         p2.join()
     else:
-        Create_data(keylist, b,'No multitask')
+        Create_data(keylist, b, 'No multitask')
 """
     if l % 1000 == 0:
         with open(r'D:/Thesis/Thesis Code/Data_Created/Data_Spherical_With_Pos_OrientationPmaps.pickle', 'wb') as handle:
@@ -264,4 +309,4 @@ with open(r'D:/Thesis/Thesis Code/DataBackup/Data_Spherical_With_Pos_Orientation
 print('final saves complete')
 """
 
-#print('completed')
+# print('completed')

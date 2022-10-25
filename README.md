@@ -14,9 +14,11 @@ _Note that only a hemisphere is used during data creation_
 
 <img src="https://github.com/KryptixOne/Spherical-Data-Generation-For-3D-Meshes/blob/main/Images/SphereAroundScaledPC.PNG" width="300" />
 
-
+<img src="https://github.com/KryptixOne/Spherical-Data-Generation-For-3D-Meshes/blob/main/Images/GraspBreakDown.png" width="300" />
 
 ## Resulting Data:
+
+
 
 ### Resulting Data is a spherical projection of the 3-D meshes.
 

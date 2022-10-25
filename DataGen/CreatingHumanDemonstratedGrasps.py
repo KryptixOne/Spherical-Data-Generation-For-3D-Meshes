@@ -105,12 +105,15 @@ def grasps_in_hemisphere(grasps_list_o3d, hemis_radius=1, hemis_resolution=60, r
         hemisphere_points = rotation.apply(hemisphere_points)
 
     grasps_COM = np.asarray([l.get_center() for l in grasps_list_o3d])
+    if len(grasps_list_o3d) == 0:
+        grasps_in_hull_COM = []
+        Existing_grasps_list_o3d = []
+    else:
+        inHullList = (in_hull(grasps_COM, hemisphere_points))
+        grasps_in_hull_COM = grasps_COM[np.where(inHullList == True)]
 
-    inHullList = (in_hull(grasps_COM, hemisphere_points))
-    grasps_in_hull_COM = grasps_COM[np.where(inHullList == True)]
-
-    Existing_grasps_list_o3d = np.asarray(grasps_list_o3d)
-    Existing_grasps_list_o3d = Existing_grasps_list_o3d[np.where(inHullList == True)]
+        Existing_grasps_list_o3d = np.asarray(grasps_list_o3d)
+        Existing_grasps_list_o3d = Existing_grasps_list_o3d[np.where(inHullList == True)]
 
     return grasps_in_hull_COM, hemisphere_points, Existing_grasps_list_o3d
 
@@ -159,7 +162,7 @@ def grasps_to_spherical(grasps_in_hull, rayOrigins, Existing_grasps_list_o3d, us
         """rv = unitVect_rays --> a
             gv = unitVect_gripper--> b"""
         if a.shape[0] == 1:
-            rej = a - np.dot((np.dot(a, b) / np.dot(b, b)), b)
+            rej = a - np.dot((np.dot(a, np.transpose(b)) / np.dot(b, np.transpose(b))), b)
         else:
             x = (np.einsum('ij, ij->i', a, b)) / (np.einsum('ij, ij->i', b, b))
             x_new = np.expand_dims(x, axis=0)
@@ -183,6 +186,13 @@ def grasps_to_spherical(grasps_in_hull, rayOrigins, Existing_grasps_list_o3d, us
         return np.linalg.norm(
             np.outer(np.dot(rs1 - q1, x) / np.dot(x, x), x) + q1 - rs1,
             axis=1)
+
+    if len(grasps_in_hull) == 0:
+        Orientation_img = np.zeros((3, 1, rayOrigins.shape[0]))
+        Orientation_img = Orientation_img.reshape((3, 60, 60))
+        spherical_positions = np.zeros((1, rayOrigins.shape[0]))
+        spherical_positions = spherical_positions.reshape((60, 60))
+        return spherical_positions, Orientation_img
 
     distList = []
     for endpoint in rayOrigins:
@@ -405,9 +415,9 @@ def as_mesh(scene_or_mesh):
 
 
 def main():
-    num_grasps_to_display = 200
-    num_of_rotations = 10
-    randomized_rotation = False
+    num_grasps_to_display = 20
+    num_of_rotations = 24
+    randomized_rotation = True
     resolution = 60
     rotational_degree = 60  # degree of rotation for hemisphere
     directoryForMeshes = 'D:/Thesis/Data/OrigData'
@@ -418,9 +428,13 @@ def main():
 
     graspFiles = ['grasps/' + f for f in os.listdir(directoryForGrasps) if isfile(join(directoryForGrasps, f))]
     # meshFiles = [m for m in os.listdir(directoryHoldingMeshFiles) if isfile(join(directoryHoldingMeshFiles, m))]
-    objectsTohumanDemonstrate = ['Cap', 'CupCake', 'Flashlight', 'Hat', 'Magnet', 'Thermostat', 'Wallet', 'Teacup',
-                                 'Shampoo', 'AAABattery', 'Ball', 'Banana', 'BeerBottle', 'Paper', 'ScrewDriver',
-                                 'TapeMeasure', 'Watch', 'PillBottle', 'Sandwich', 'MilkCarton', 'Hammer', 'Knife']
+    # objectsTohumanDemonstrate = ['Cap', 'CupCake', 'Flashlight' 'Teacup',
+    #                             'Shampoo', 'AAABattery', 'Ball', 'Banana', 'BeerBottle', 'Paper', 'ScrewDriver',
+    #                             'TapeMeasure', 'Watch', 'PillBottle', 'Sandwich', 'MilkCarton', 'Hammer', 'Knife']
+
+    objectsTohumanDemonstrate = ['Teacup',
+                                 'Shampoo', 'ScrewDriver',
+                                 'PillBottle', ]
 
     graspFiles = [f for f in graspFiles if f.split('_')[0][7:] in objectsTohumanDemonstrate]
 
@@ -472,45 +486,101 @@ def main():
         handover_img_collection = {}
         pouring_img_collection = {}
         toolUse_img_collection = {}
-        for x in successful_grasps_o3d:
-            o3d.visualization.draw_geometries(obj_mesh_o3d_normalized + [successful_grasps_o3d[x]],
-                                              mesh_show_back_face=True)
-            is_handover = input('is the grasp good for the task: hand-over? ')
-            is_pouring = input('is the grasp good for the task: pouring? ')
-            is_tooluse = input('is the grasp good for the task: tool-use? ')
+        print(f.split('_')[0][7:])
+        canHandover = input('Can this object be handover?: ')
+        canPour = input('Can this object be Poured? ')
+        isTool = input('Is this object a tool? ')
+        getMoreGrasps = True
+        while getMoreGrasps:
+            for x in successful_grasps_o3d:
+                o3d.visualization.draw_geometries(obj_mesh_o3d_normalized + [x],
+                                                  mesh_show_back_face=True, width=700, height=700, left=0)
+                if canHandover == 'y':
+                    is_handover = input('is the grasp good for the task: hand-over? ')
+                else:
+                    is_handover = 'n'
+                if canPour == 'y':
+                    is_pouring = input('is the grasp good for the task: pouring? ')
+                else:
+                    is_pouring = 'n'
+                if isTool == 'y':
+                    is_tooluse = input('is the grasp good for the task: tool-use? ')
+                else:
+                    is_tooluse = 'n'
 
-            if is_handover is 'y':
-                handoverList.append(successful_grasps_o3d[x])
-            if is_pouring is 'y':
-                pouringList.append(successful_grasps_o3d[x])
-            if is_tooluse is 'y':
-                toolUseList.append(successful_grasps_o3d[x])
+                if is_handover == 'y':
+                    handoverList.append(x)
+                if is_pouring == 'y':
+                    pouringList.append(x)
+                if is_tooluse == 'y':
+                    toolUseList.append(x)
+            print('you have demonstrated ', len(handoverList), ' Handover grasps')
+            print('you have demonstrated ', len(pouringList), ' Pouring grasps')
+            print('you have demonstrated ', len(toolUseList), ' toolUse grasps')
+            getmore = input('Do you want to view more grasps?: ')
+            if getmore == 'y':
+                obj_mesh = load_mesh(f, mesh_root_dir=directoryForMeshes)
 
-        # print()
-        # HumanLikeGrasps = [successful_grasps_o3d[1]] + [successful_grasps_o3d[4]] + [successful_grasps_o3d[9]] + [
-        #    successful_grasps_o3d[14]] + [successful_grasps_o3d[17]] + [successful_grasps_o3d[18]] + [
-        #           successful_grasps_o3d[19]] + [successful_grasps_o3d[26]] + [successful_grasps_o3d[33]] + [
-        #           successful_grasps_o3d[34]] + [successful_grasps_o3d[37]]+ [successful_grasps_o3d[38]]+[successful_grasps_o3d[40]]+[successful_grasps_o3d[54]]+[successful_grasps_o3d[56]]+[successful_grasps_o3d[59]]+[successful_grasps_o3d[63]]
-        # o3d.visualization.draw_geometries(obj_mesh_o3d_normalized + successful_grasps_o3d, mesh_show_back_face=True)
-        # 1 4 9 14 17 18 19 26 33 34 37 38 40 54 56 59 63
-        # rotate hemisphere around object to sample depth in different ways.
-        try:
-            if num_of_rotations is not None:
-                img_list = []
+                # get transformations and quality of all simulated grasps
+                T, success = load_grasps(os.path.join(directoryForMeshes, f))
+                try:
+                    successful_grasps = [
+                        create_gripper_marker(color=[0, 255, 0]).apply_transform(t)
+                        for t in T[np.random.choice(np.where(success == 1)[0], num_grasps_to_display)]
+                    ]
+                except:
+                    print(f)
+                    print('issue with grasp')
+                    continue
 
-                rotationsArray, num_of_rotations = create_random_rotation_vectors(num_of_rotations,
-                                                                                  random=randomized_rotation,
-                                                                                  degree=rotational_degree)
-                for x in ['Pouring', 'ToolUse', 'Handover']:
-                    if x == 'Pouring':
-                        successful_grasps_o3d = pouringList
-                    if x == 'ToolUse':
-                        successful_grasps_o3d = toolUseList
-                    if x == 'Handover':
-                        successful_grasps_o3d = handoverList
+                # Centering around origin and scaling to unit vector max length
 
-                    for i in range(num_of_rotations):
-                        # create spherical Data Img
+                k = obj_mesh.centroid
+
+                translation_matrix = np.array([[1, 0, 0, -1 * k[0]],
+                                               [0, 1, 0, -1 * k[1]],
+                                               [0, 0, 1, -1 * k[2]],
+                                               [0, 0, 0, 1]])
+                # move all grasps such that object geometric center lies at origin
+
+                obj_mesh.apply_transform(translation_matrix)
+
+                scaler = 1 / (np.amax(np.linalg.norm(np.asarray(obj_mesh.vertices), axis=1)))
+                obj_mesh.apply_scale(scaler)
+                successful_grasps = [(t.apply_transform(translation_matrix)).apply_scale(scaler) for t in
+                                     successful_grasps]
+
+                # Now grasps and obj_mesh are centered around origin and have been scaled in unit vector length.
+                # Convert Trimesh objects to O3D for use with previously created algorithm.
+
+                successful_grasps_o3d, obj_mesh_o3d_normalized = trimesh_to_o3d(trimesh_mesh=obj_mesh,
+                                                                                grasp_mesh_trimesh=successful_grasps,
+                                                                                mesh_path=directoryTemp
+                                                                                )
+
+            else:
+                getMoreGrasps = False
+
+        if num_of_rotations is not None:
+            Pouringimg_list = []
+            ToolUseimg_list = []
+            Handoverimg_list = []
+            rotationsArray, num_of_rotations = create_random_rotation_vectors(num_of_rotations,
+                                                                              random=randomized_rotation,
+                                                                              degree=rotational_degree)
+            for x in ['Handover', 'ToolUse', 'Pouring']:
+                if x == 'Pouring' and canPour == 'y':
+                    successful_grasps_o3d = pouringList
+                elif x == 'ToolUse' and isTool == 'y':
+                    successful_grasps_o3d = toolUseList
+                elif x == 'Handover' and canHandover == 'y':
+                    successful_grasps_o3d = handoverList
+                else:
+                    continue
+
+                for i in range(num_of_rotations):
+                    # create spherical Data Img
+                    try:
                         spherical_data_img = create_spherical_depth_data(obj_mesh_o3d_normalized[0],
                                                                          rotations=rotationsArray[i][0],
                                                                          resolution=resolution)
@@ -523,42 +593,48 @@ def main():
 
                         complete_img_data = np.concatenate((spherical_data_img, positional_img, orentiation_img),
                                                            axis=0)  # (8xResxRes)
-                        img_list.append(complete_img_data)
-                    # img_collection[f] = img_list
-                    if x == 'Pouring':
-                        pouring_img_collection[f] = img_list
-                        with open(r'D:/Thesis/HumanDemonstrated/Pouring/' + f[:-3] + '.pickle', 'wb') as handle:
-                            pickle.dump(pouring_img_collection, handle, protocol=pickle.HIGHEST_PROTOCOL)
-                    if x == 'ToolUse':
-                        toolUse_img_collection[f] = img_list
-                        with open(r'D:/Thesis/HumanDemonstrated/ToolUse/' + f[:-3] + '.pickle', 'wb') as handle:
-                            pickle.dump(toolUse_img_collection, handle, protocol=pickle.HIGHEST_PROTOCOL)
-                    if x == 'Handover':
-                        handover_img_collection[f] = img_list
-                        with open(r'D:/Thesis/HumanDemonstrated/Handover/' + f[:-3] + '.pickle', 'wb') as handle:
-                            pickle.dump(handover_img_collection, handle, protocol=pickle.HIGHEST_PROTOCOL)
+                        if x == 'Pouring' and canPour == 'y':
+                            Pouringimg_list.append(complete_img_data)
+                        elif x == 'ToolUse' and isTool == 'y':
+                            ToolUseimg_list.append(complete_img_data)
+                        elif x == 'Handover' and canHandover == 'y':
+                            Handoverimg_list.append(complete_img_data)
+                        else:
+                            pass
+
+                    except:
+                        print('exception occured, but im lazy')
+                        continue
+                # img_collection[f] = img_list
+                if x == 'Pouring' and canPour == 'y':
+                    pouring_img_collection[f] = Pouringimg_list
+                    with open(r'D:/Thesis/HumanDemonstrated/Pouring/' + f[:-3] + '.pickle', 'wb') as handle:
+                        pickle.dump(pouring_img_collection, handle, protocol=pickle.HIGHEST_PROTOCOL)
+                if x == 'ToolUse' and isTool == 'y':
+                    toolUse_img_collection[f] = ToolUseimg_list
+                    with open(r'D:/Thesis/HumanDemonstrated/ToolUse/' + f[:-3] + '.pickle', 'wb') as handle:
+                        pickle.dump(toolUse_img_collection, handle, protocol=pickle.HIGHEST_PROTOCOL)
+                if x == 'Handover' and canHandover == 'y':
+                    handover_img_collection[f] = Handoverimg_list
+                    with open(r'D:/Thesis/HumanDemonstrated/Handover/' + f[:-3] + '.pickle', 'wb') as handle:
+                        pickle.dump(handover_img_collection, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 
 
-            else:
+        else:
 
-                spherical_data_img = create_spherical_depth_data(obj_mesh_o3d_normalized)
+            spherical_data_img = create_spherical_depth_data(obj_mesh_o3d_normalized)
 
-                available_grasps, positionalHemisphere, Existing_grasps_list_o3d = grasps_in_hemisphere(
-                    successful_grasps_o3d, rotation=rotationsArray[i][0], hemis_resolution=resolution)
+            available_grasps, positionalHemisphere, Existing_grasps_list_o3d = grasps_in_hemisphere(
+                successful_grasps_o3d, rotation=rotationsArray[i][0], hemis_resolution=resolution)
 
-                positional_img, Orentiation_img = grasps_to_spherical(available_grasps, positionalHemisphere,
-                                                                      Existing_grasps_list_o3d)
+            positional_img, Orentiation_img = grasps_to_spherical(available_grasps, positionalHemisphere,
+                                                                  Existing_grasps_list_o3d)
 
-                complete_img_data = np.concatenate((spherical_data_img, positional_img, orentiation_img),
-                                                   axis=0)  # (8xResxRes)
-                #img_collection[f] = complete_img_data
-            print(l)
-
-        except:
-            print('issue with run on\n', f)
-            print('most likely dimensional mismatch due to einsum')
-            continue
+            complete_img_data = np.concatenate((spherical_data_img, positional_img, orentiation_img),
+                                               axis=0)  # (8xResxRes)
+            # img_collection[f] = complete_img_data
+        print(l)
 
 
 if __name__ == "__main__":
