@@ -29,8 +29,8 @@ Image below shows the recording depth/hit-distance between the enclosing hemisph
 
 <img src="https://github.com/KryptixOne/Spherical-Data-Generation-For-3D-Meshes/blob/main/Images/CreatedGraspDataImages/Spherical%20Depth%20Data.png" width="500" />
 
-**Channel 2:** Grasp Position Data, Mapped to nearest ray
-Image below shows the Grasp positional data, where points correspond to the nearest ray that a grasp would be located with.
+**Channel 2:** Absolute Grasp Position Data, Mapped to nearest ray
+Image below shows the absolute grasp positional data, where points correspond to the nearest ray that a grasp would be located with.
 
 <img src="https://github.com/KryptixOne/Spherical-Data-Generation-For-3D-Meshes/blob/main/Images/CreatedGraspDataImages/PositionalGripperData.png" width="500" />
 
@@ -45,7 +45,7 @@ grasp vector and orgination ray vector are used_
 
 <img src="https://github.com/KryptixOne/Spherical-Data-Generation-For-3D-Meshes/blob/main/Images/CreatedGraspDataImages/OrientationPhi.png" width="500" />
 
-**Channel 5:** Rotational Alpha Value --> Used to obtain grasp rotation
+**Channel 5:** Rotational Gamma Value --> Used to obtain grasp rotation
 
 <img src="https://github.com/KryptixOne/Spherical-Data-Generation-For-3D-Meshes/blob/main/Images/CreatedGraspDataImages/Orientation_Rotation.png" width="500" />
 
