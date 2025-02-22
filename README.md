@@ -1,76 +1,100 @@
-# Spherical-Data-Generation-For-3D-Meshes
-## Spherical Representation of Grasps and ShapeNet Datasets
+# Spherical Data Generation for 3D Meshes
 
-Using ShapeNet and the Acroynm Datasets (depicted below), we create a spherical representation of the data through hemispherical radial ray-casting
+## Overview
+This project focuses on generating spherical representations of 3D meshes using data from ShapeNet and Acronym datasets. The method employs hemispherical radial ray-casting to transform the data into a structured spherical format.
 
-Example ShapeNet + Acroynm baseline representation
+## Dataset Representation
+The ShapeNet and Acronym datasets are used to create a baseline representation, as shown below:
 
-<img src="https://github.com/KryptixOne/Spherical-Data-Generation-For-3D-Meshes/blob/main/Images/DatasetGraspsOnMesh_Acronym.PNG" width="300" />
+<p align="center">
+  <img src="https://github.com/KryptixOne/Spherical-Data-Generation-For-3D-Meshes/blob/main/Images/DatasetGraspsOnMesh_Acronym.PNG" width="300" />
+</p>
 
+To achieve this representation, a sphere is placed around each object, with rays cast from its surface to capture spatial and grasp-related information. Only a hemisphere is utilized for data creation.
 
+<p align="center">
+  <img src="https://github.com/KryptixOne/Spherical-Data-Generation-For-3D-Meshes/blob/main/Images/SphereAroundScaledPC.PNG" width="300" />
+  <img src="https://github.com/KryptixOne/Spherical-Data-Generation-For-3D-Meshes/blob/main/Images/GraspBreakDown.png" width="300" />
+</p>
 
-See below an example of sphere enclosing object. Sphere displays ray-casting origin points.
-_Note that only a hemisphere is used during data creation_
+---
 
-<img src="https://github.com/KryptixOne/Spherical-Data-Generation-For-3D-Meshes/blob/main/Images/SphereAroundScaledPC.PNG" width="300" />
+## Resulting Data Representation
+The resulting dataset consists of a spherical projection of the 3D meshes, organized into different channels:
 
-<img src="https://github.com/KryptixOne/Spherical-Data-Generation-For-3D-Meshes/blob/main/Images/GraspBreakDown.png" width="300" />
+### **Channel 1: Spherical Depth Data**
+Captures depth values by measuring hit-distance between the enclosing hemisphere and the object.
 
-## Resulting Data:
+<p align="center">
+  <img src="https://github.com/KryptixOne/Spherical-Data-Generation-For-3D-Meshes/blob/main/Images/CreatedGraspDataImages/Spherical%20Depth%20Data.png" width="500" />
+</p>
 
+### **Channel 2: Absolute Grasp Position Data**
+Maps absolute grasp positions to the nearest ray in the spherical coordinate system.
 
+<p align="center">
+  <img src="https://github.com/KryptixOne/Spherical-Data-Generation-For-3D-Meshes/blob/main/Images/CreatedGraspDataImages/PositionalGripperData.png" width="500" />
+</p>
 
-### Resulting Data is a spherical projection of the 3-D meshes.
+### **Channel 3: Orientation Theta Value**
+Represents the inclination angle to determine grasp orientation.
 
-The Data is organized as follows:
+<p align="center">
+  <img src="https://github.com/KryptixOne/Spherical-Data-Generation-For-3D-Meshes/blob/main/Images/CreatedGraspDataImages/OreintationThetas.png" width="500" />
+</p>
 
-**Channel 1:** Spherical Depth Data, obtain through simple ray casting
-Image below shows the recording depth/hit-distance between the enclosing hemisphere and the object in question
+### **Channel 4: Orientation Phi Value**
+Encodes the azimuthal angle to determine grasp orientation.
 
-<img src="https://github.com/KryptixOne/Spherical-Data-Generation-For-3D-Meshes/blob/main/Images/CreatedGraspDataImages/Spherical%20Depth%20Data.png" width="500" />
+<p align="center">
+  <img src="https://github.com/KryptixOne/Spherical-Data-Generation-For-3D-Meshes/blob/main/Images/CreatedGraspDataImages/OrientationPhi.png" width="500" />
+</p>
 
-**Channel 2:** Absolute Grasp Position Data, Mapped to nearest ray
-Image below shows the absolute grasp positional data, where points correspond to the nearest ray that a grasp would be located with.
+### **Channel 5: Rotational Gamma Value**
+Captures rotation along the grasp axis.
 
-<img src="https://github.com/KryptixOne/Spherical-Data-Generation-For-3D-Meshes/blob/main/Images/CreatedGraspDataImages/PositionalGripperData.png" width="500" />
+<p align="center">
+  <img src="https://github.com/KryptixOne/Spherical-Data-Generation-For-3D-Meshes/blob/main/Images/CreatedGraspDataImages/Orientation_Rotation.png" width="500" />
+</p>
 
-_Note that for the following orientation data. The values at each plotted position are based on the spherical coordinate system. To identify plane of rotation, 
-grasp vector and orgination ray vector are used_
+---
 
-**Channel 3:** Spherical Theta Value --> Used to obtain orientation of grasp
+## Gaussian Mixture Model (GMM) Representations
+A key goal of this dataset is to model grasp position and orientation using probability distributions. Gaussian Mixture Models (GMMs) are applied to create probabilistic representations.
 
-<img src="https://github.com/KryptixOne/Spherical-Data-Generation-For-3D-Meshes/blob/main/Images/CreatedGraspDataImages/OreintationThetas.png" width="500" />
+### **Dense Raw Data**
+<p align="center">
+  <img src="https://github.com/KryptixOne/Spherical-Data-Generation-For-3D-Meshes/blob/main/Images/GMM_test_results/Dense_raw.PNG" width="500" />
+</p>
 
-**Channel 4:** Spherical Phi Value --> Used to obtain orientation of grasp
+### **GMM Dense Data - Positional Representation**
+<p align="center">
+  <img src="https://github.com/KryptixOne/Spherical-Data-Generation-For-3D-Meshes/blob/main/Images/GMM_test_results/DenseData_components.png" width="700" />
+</p>
 
-<img src="https://github.com/KryptixOne/Spherical-Data-Generation-For-3D-Meshes/blob/main/Images/CreatedGraspDataImages/OrientationPhi.png" width="500" />
+### **GMM Dense Data - 3D Representation**
+<p align="center">
+  <img src="https://github.com/KryptixOne/Spherical-Data-Generation-For-3D-Meshes/blob/main/Images/GMM_test_results/Dense_3D_data_components.png" width="700" />
+</p>
 
-**Channel 5:** Rotational Gamma Value --> Used to obtain grasp rotation
+### **Sparse Data - Positional Representation**
+<p align="center">
+  <img src="https://github.com/KryptixOne/Spherical-Data-Generation-For-3D-Meshes/blob/main/Images/GMM_test_results/sparseData.png" width="500" />
+</p>
 
-<img src="https://github.com/KryptixOne/Spherical-Data-Generation-For-3D-Meshes/blob/main/Images/CreatedGraspDataImages/Orientation_Rotation.png" width="500" />
+### **GMM Sparse Data - Positional Representation**
+<p align="center">
+  <img src="https://github.com/KryptixOne/Spherical-Data-Generation-For-3D-Meshes/blob/main/Images/GMM_test_results/SparseDataGMM.png" width="700" />
+</p>
 
+---
 
-### Gaussian Mixture Models (n_components) representations of data:
+## Conclusion
+This dataset provides a spherical representation of 3D objects and their grasps, which can be leveraged for grasp planning, robotic manipulation, and probabilistic modeling of grasp distributions. The Gaussian Mixture Model analysis further enhances grasp prediction by capturing underlying probabilistic distributions.
 
-A primary objective of this dataset is to create a probability mapping of the position and orientation data. To do so, Gaussian mixture models were implemented.
+---
 
-**Dense Raw Data**
+## Citation
+If you use this dataset in your research, please consider citing this work.
 
-<img src="https://github.com/KryptixOne/Spherical-Data-Generation-For-3D-Meshes/blob/main/Images/GMM_test_results/Dense_raw.PNG" width="500" />
-
-**GMM Dense Data Positional**
-
-<img src="https://github.com/KryptixOne/Spherical-Data-Generation-For-3D-Meshes/blob/main/Images/GMM_test_results/DenseData_components.png" width="700" />
-
-**GMM Dense Data 3D**
-
-<img src="https://github.com/KryptixOne/Spherical-Data-Generation-For-3D-Meshes/blob/main/Images/GMM_test_results/Dense_3D_data_components.png" width="700" />
-
-**Sparse Data Positional**
-
-<img src="https://github.com/KryptixOne/Spherical-Data-Generation-For-3D-Meshes/blob/main/Images/GMM_test_results/sparseData.png" width="500" />
-
-**GMM Sparse Data Positional**
-
-<img src="https://github.com/KryptixOne/Spherical-Data-Generation-For-3D-Meshes/blob/main/Images/GMM_test_results/SparseDataGMM.png" width="700" />
-
+---
